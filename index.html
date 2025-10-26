@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HTML5 Flipbook (22 Pages) — No Fullscreen</title>
+  <title>Charming</title>
   <style>
     :root {
       --bg: #0b0c10;
@@ -66,7 +66,7 @@
       display: block;
     }
 
-    /* Slower, smoother */
+    /* Slower, smoother page curl */
     .curling {
       transition: transform 1.15s cubic-bezier(.65,.05,.36,1);
       will-change: transform;
@@ -294,7 +294,7 @@
       updateCounter();
     }
 
-    // Corrected hinge directions
+    // ---- Corrected hinge + visibility lock-in ----
     function animateFlip(forward, onDone){
       if (isAnimating) return;
       if (REDUCED_MOTION){
@@ -320,7 +320,7 @@
         if (cur.type === 'cover'){
           leafSrc = pages[0];
         } else if (cur.type === 'spread'){
-          leafSrc = pages[cur.rightIdx]; // flip the current RIGHT page forward
+          leafSrc = pages[cur.rightIdx]; // turn current RIGHT page forward
         }
       } else {
         const prv = spreadIndices(Math.max(spreadIndex - 1, 0));
@@ -329,7 +329,7 @@
         if (cur.type === 'back'){
           leafSrc = pages[pages.length - 1];
         } else if (cur.type === 'spread'){
-          leafSrc = pages[cur.leftIdx]; // flip the current LEFT page backward
+          leafSrc = pages[cur.leftIdx];  // turn current LEFT page backward
         }
       }
 
@@ -346,20 +346,30 @@
         leaf.style.transition = 'transform 2.2s cubic-bezier(.65,.05,.36,1)';
       }
 
-      // POSITION & HINGE — key fix
+      // Position, explicit hinge, and hide the static page beneath
+      let staticToHide = null;
+
       if (forward){
-        // Forward: hinge on the RIGHT edge.
+        // Hinge on RIGHT edge
         if (isCoverView()){
-          leaf.style.left = '0px'; // single page (cover) lives at x=0
+          leaf.style.left = '0px';
         } else {
-          leaf.style.left = PAGE_W + 'px'; // interior right page starts at +PAGE_W
-          leaf.classList.add('right');     // mirror static right-page geometry
+          leaf.style.left = PAGE_W + 'px';
+          leaf.classList.add('right');
+          staticToHide = book.querySelector('.page.right');
         }
-        leaf.style.transformOrigin = 'right center';
+        leaf.style.transformOrigin = '100% 50%';
       } else {
-        // Backward: hinge on the LEFT edge (left page).
+        // Hinge on LEFT edge
         leaf.style.left = '0px';
-        leaf.style.transformOrigin = 'left center';
+        leaf.style.transformOrigin = '0% 50%';
+        if (cur.type === 'spread'){
+          staticToHide = book.querySelector('.page:not(.right)');
+        }
+      }
+
+      if (staticToHide) {
+        staticToHide.style.visibility = 'hidden';
       }
 
       // Correct image; eager + sync decode to avoid blink
@@ -374,7 +384,7 @@
       img.onerror = () => { if (FALLBACK_IMG) img.src = FALLBACK_IMG; };
       leaf.appendChild(img);
 
-      // Soft curl shade (direction matches hinge side)
+      // Soft curl shade (darker near hinge)
       const shade = document.createElement('div');
       shade.style.position = 'absolute';
       shade.style.inset = '0';
@@ -382,21 +392,22 @@
       shade.style.mixBlendMode = 'multiply';
       shade.style.opacity = '0.22';
       shade.style.background = forward
-        ? 'linear-gradient(270deg, rgba(0,0,0,0.35), rgba(0,0,0,0.0) 40%)' // darker at right edge
-        : 'linear-gradient(90deg,  rgba(0,0,0,0.35), rgba(0,0,0,0.0) 40%)'; // darker at left edge
+        ? 'linear-gradient(270deg, rgba(0,0,0,0.35), rgba(0,0,0,0.0) 40%)' // darker at right
+        : 'linear-gradient(90deg,  rgba(0,0,0,0.35), rgba(0,0,0,0.0) 40%)'; // darker at left
       leaf.appendChild(shade);
 
       book.appendChild(leaf);
 
-      // Kick the transition (GPU nudge via translateZ) with correct rotation sign
+      // Animate — swap sign for forward to normalize across engines
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        const angle = forward ? -180 : 180;
+        const angle = forward ? 180 : -180;
         leaf.style.transform = `translateZ(0.001px) rotateY(${angle}deg)`;
       }));
 
-      // Finish (double RAF before render to prevent last-frame flash)
+      // Finish (restore hidden static page; double RAF before render)
       leaf.addEventListener('transitionend', () => {
         leaf.remove();
+        if (staticToHide) staticToHide.style.visibility = '';
         isAnimating = false;
         if (typeof onDone === 'function') onDone();
         requestAnimationFrame(() => requestAnimationFrame(() => {
