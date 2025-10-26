@@ -3,26 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HTML5 Flipbook (22 Pages) — Patched & Polished (All Updates + Audio Fix)</title>
+  <title>HTML5 Flipbook (22 Pages) — Updated Layout</title>
   <style>
     :root {
       --bg: #0b0c10;
       --ink: #eaf0f6;
       --accent: #57a5ff;
-      --page-w: 500px;   /* fixed square width per page */
-      --page-h: 500px;   /* fixed square height per page */
+      --page-w: 500px;
+      --page-h: 500px;
       --shadow: 0 30px 80px rgba(0,0,0,.45), 0 8px 24px rgba(0,0,0,.5);
       --focus: 0 0 0 3px rgba(87,165,255,.6);
     }
+
     * { box-sizing: border-box; }
     html, body { height: 100%; }
+
     body {
-      margin: 0; background: radial-gradient(1200px 700px at 50% -10%, #1a2333 0, #0b0c10 60%, #050607 100%);
-      color: var(--ink); font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-      display: grid; place-items: center; overflow: hidden; gap: 10px;
+      margin: 0;
+      background: radial-gradient(1200px 700px at 50% -10%, #1a2333 0, #0b0c10 60%, #050607 100%);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
     }
-    .viewport { height: var(--page-h); perspective: 2000px; position: relative; outline: none; }
-    .book { position: absolute; inset: 0; transform-style: preserve-3d; }
+
+    /* Stage stacks the book and controls */
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px; /* controls close to bottom of book */
+    }
+
+    .viewport {
+      height: var(--page-h);
+      perspective: 2000px;
+      position: relative;
+      outline: none;
+    }
+
+    .book {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+    }
+
     .page {
       position: absolute; top: 0; left: 0;
       width: var(--page-w); height: var(--page-h); overflow: hidden;
@@ -31,103 +57,124 @@
       backface-visibility: hidden;
       background: #0c0f16;
     }
+
     .page.right { left: var(--page-w); transform-origin: right center; }
+
     .page img {
       width: var(--page-w);
       height: var(--page-h);
       object-fit: cover;
       display: block;
     }
-    .curling { 
-      transition: transform 0.8s cubic-bezier(.77,.2,.05,1.0); 
-      will-change: transform; 
+
+    .curling {
+      transition: transform 0.8s cubic-bezier(.77,.2,.05,1.0);
+      will-change: transform;
       z-index: 10;
       pointer-events: none;
-      transform: rotateY(0deg); /* explicit initial state */
+      transform: rotateY(0deg);
     }
-    .ui { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; align-items: center; }
-    .nav { 
-      border: 1px solid #2b3345; background: rgba(15,20,32,.9); color: var(--ink); 
-      padding: 10px 14px; border-radius: 12px; font-weight: 700; font-size: 18px; cursor: pointer;
+
+    .ui {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 6px;
+    }
+
+    .nav {
+      border: 1px solid #2b3345;
+      background: rgba(15,20,32,.9);
+      color: var(--ink);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      cursor: pointer;
       box-shadow: 0 6px 16px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
     }
+
     .nav:focus-visible { box-shadow: var(--focus); outline: none; }
     .nav:disabled { opacity: .5; cursor: default; }
     .nav:hover:not(:disabled) { background: rgba(20,26,42,.95); border-color: #3a4560; }
-    .counter { padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,.1); background: rgba(10,12,18,.6); font-variant-numeric: tabular-nums; }
-    .audio-controls { display: flex; gap: 8px; align-items: center; }
-    .audio-controls .nav { font-size: 14px; padding: 8px 10px; }
-    .audio-label { opacity: .85; font-size: 14px; }
 
-    /* Prefers-reduced-motion accessibility */
+    .counter {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(10,12,18,.6);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .audio-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .audio-controls .nav {
+      font-size: 14px;
+      padding: 8px 10px;
+    }
+
+    .audio-label {
+      opacity: .85;
+      font-size: 14px;
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .curling { transition: none !important; }
     }
   </style>
 </head>
 <body>
-  <div class="viewport" id="viewport" aria-live="polite" tabindex="0"></div>
+  <div class="stage">
+    <div class="viewport" id="viewport" aria-live="polite" tabindex="0"></div>
 
-  <div class="audio-controls" aria-label="Background audio controls">
-    <span class="audio-label">Audio:</span>
-    <button class="nav" id="muteBtn" aria-label="Mute">🔇 Mute</button>
-    <button class="nav" id="pauseBtn" aria-label="Pause">⏸️ Pause</button>
+    <!-- NAVIGATION CONTROLS (above audio) -->
+    <div class="ui" id="ui" role="toolbar" aria-label="Flipbook navigation">
+      <button class="nav" id="prevBtn" aria-label="Previous page">⟵</button>
+      <div class="counter" id="counter" aria-live="polite">1 / 1</div>
+      <button class="nav" id="nextBtn" aria-label="Next page">⟶</button>
+      <button class="nav" id="fsBtn" aria-label="Fullscreen" aria-pressed="false">⛶ Fullscreen</button>
+    </div>
+
+    <!-- AUDIO CONTROLS (below nav) -->
+    <div class="audio-controls" aria-label="Background audio controls">
+      <span class="audio-label">Audio:</span>
+      <button class="nav" id="muteBtn" aria-label="Mute">🔇 Mute</button>
+      <button class="nav" id="pauseBtn" aria-label="Pause">⏸️ Pause</button>
+    </div>
   </div>
 
-  <div class="ui" id="ui" role="toolbar" aria-label="Flipbook navigation">
-    <button class="nav" id="prevBtn" aria-label="Previous page">⟵</button>
-    <div class="counter" id="counter" aria-live="polite">1 / 1</div>
-    <button class="nav" id="nextBtn" aria-label="Next page">⟶</button>
-    <button class="nav" id="fsBtn" aria-label="Fullscreen" aria-pressed="false">⛶ Fullscreen</button>
-  </div>
-
-  <!-- AUDIO: use Google Drive direct-download link (must be shared) -->
-  <!-- AUDIO: try multiple mirrors; removed crossorigin to avoid unnecessary CORS preflight -->
-  <audio id="bgm" preload="auto">
-    <!-- Sources injected via JS to support fallbacks -->
-  </audio>
+  <audio id="bgm" preload="auto"></audio>
 
   <script>
-	// -------------------------------
-	// Config
-	// -------------------------------
-	const BASE = 'https://namyers29.github.io/charming/img/';
-	const DEFAULT_PAGES = Array.from({length: 22}, (_, i) => {
-	  const n = String(i + 1).padStart(2, '0'); // 01, 02, … 22
-	  return `${BASE}${n}.png`;                // adjust to .jpg/.png if needed
-	});
+    const BASE = 'https://namyers29.github.io/charming/img/';
+    const DEFAULT_PAGES = Array.from({length: 22}, (_, i) => {
+      const n = String(i + 1).padStart(2, '0');
+      return `${BASE}${n}.png`;
+    });
 
-	// Optional placeholder if an image fails to load
-	const FALLBACK_IMG = 'https://namyers29.github.io/charming/img/fallback.png';
+    const FALLBACK_IMG = 'https://namyers29.github.io/charming/img/fallback.png';
+    const AUDIO_SOURCES = ['audio/bgm.mp3'];
 
-    // -------------------------------
-    // State
-    // -------------------------------
-    let pages = Array.isArray(DEFAULT_PAGES) && DEFAULT_PAGES.length ? [...DEFAULT_PAGES] : [];
-    let spreadIndex = 0;     // 0 = cover, 1..maxSpread()-1 = interior spreads, maxSpread() = back
-    let forwardFlips = 0;    // count forward flips to trigger audio on second flip
+    let pages = [...DEFAULT_PAGES];
+    let spreadIndex = 0;
+    let forwardFlips = 0;
     let bgmStarted = false;
-    let isAnimating = false; // debounce flips during transition
+    let isAnimating = false;
 
-    // Respect system motion preference
     const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    // -------------------------------
-    // Elements
-    // -------------------------------
     const viewport = document.getElementById('viewport');
     const counterEl = document.getElementById('counter');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const fsBtn   = document.getElementById('fsBtn');
+    const fsBtn = document.getElementById('fsBtn');
     const bgm = document.getElementById('bgm');
-    // Candidate audio mirrors (edit these to real working URLs you control)
-    const AUDIO_SOURCES = [
-  'audio/bgm.mp3',
-  // optional extra mirror, e.g. absolute:
-  // 'https://namyers29.github.io/charming/audio/bgm.mp3'
-];
-
+    const muteBtn = document.getElementById('muteBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
 
     function setAudioSources(urls){
       if (!bgm) return;
@@ -141,32 +188,18 @@
       bgm.load();
     }
 
-    if (bgm) {
+    if (bgm){
       setAudioSources(AUDIO_SOURCES);
       bgm.loop = false;
       bgm.volume = 1.0;
-
-      // On error, try the next source automatically
       bgm.addEventListener('error', () => {
         const current = bgm.currentSrc;
         const idx = AUDIO_SOURCES.findIndex(u => current.includes(u));
-        const nextIdx = idx >= 0 ? idx + 1 : 1;
-        if (nextIdx < AUDIO_SOURCES.length) {
-          console.warn('Audio error from', current, '→ switching to', AUDIO_SOURCES[nextIdx]);
-          setAudioSources([AUDIO_SOURCES[nextIdx]]);
-        } else {
-          console.warn('Audio error and no more fallbacks. networkState:', bgm.networkState, 'readyState:', bgm.readyState, 'src:', bgm.currentSrc);
-        }
-      });
-
-      bgm.addEventListener('canplaythrough', () => {
-        console.log('Audio canplaythrough:', bgm.currentSrc);
+        const nextIdx = idx + 1;
+        if (nextIdx < AUDIO_SOURCES.length) setAudioSources([AUDIO_SOURCES[nextIdx]]);
       });
     }
 
-    // -------------------------------
-    // Helpers: sizes from CSS vars (avoid drift)
-    // -------------------------------
     function getCssNumber(varName){
       const v = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
       return parseFloat(v.replace('px','')) || 0;
@@ -176,16 +209,13 @@
 
     function totalInteriorSpreads(){ return Math.ceil(Math.max(0, (pages.length - 2)) / 2); }
     function maxSpread(){ return totalInteriorSpreads() + 1; }
-
     function isCoverView(){ return spreadIndex === 0; }
     function isBackView(){ return spreadIndex === maxSpread(); }
-    function isSpreadView(){ return !isCoverView() && !isBackView(); }
 
     function setViewportSize(){
-      // Re-read in case CSS changed (e.g., responsive styles)
       PAGE_W = getCssNumber('--page-w') || PAGE_W;
       PAGE_H = getCssNumber('--page-h') || PAGE_H;
-      viewport.style.width = isSpreadView() ? (PAGE_W*2 + 'px') : (PAGE_W + 'px');
+      viewport.style.width = (isCoverView() || isBackView()) ? PAGE_W + 'px' : (PAGE_W * 2) + 'px';
       viewport.style.height = PAGE_H + 'px';
     }
 
@@ -193,11 +223,9 @@
       if (!counterEl) return;
       const totalViews = maxSpread() + 1;
       const viewNumber = Math.min(spreadIndex + 1, totalViews);
-      const label = `${viewNumber} / ${Math.max(totalViews, 1)}`;
-      counterEl.textContent = label;
-      counterEl.setAttribute('aria-label', `View ${viewNumber} of ${Math.max(totalViews,1)}`);
-      if (prevBtn) prevBtn.disabled = spreadIndex <= 0 || isAnimating;
-      if (nextBtn) nextBtn.disabled = spreadIndex >= maxSpread() || isAnimating;
+      counterEl.textContent = `${viewNumber} / ${Math.max(totalViews,1)}`;
+      prevBtn.disabled = spreadIndex <= 0 || isAnimating;
+      nextBtn.disabled = spreadIndex >= maxSpread() || isAnimating;
     }
 
     function createPage(url, isRight=false, altText=''){
@@ -208,7 +236,7 @@
       img.alt = altText || '';
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.onerror = () => { if (FALLBACK_IMG) { img.src = FALLBACK_IMG; img.alt = 'Image failed to load'; } };
+      img.onerror = () => { if (FALLBACK_IMG) img.src = FALLBACK_IMG; };
       p.appendChild(img);
       return p;
     }
@@ -223,87 +251,49 @@
       if (!pages.length){
         const empty = document.createElement('div');
         empty.className = 'page';
-        empty.style.width = PAGE_W+'px';
-        empty.style.height = PAGE_H+'px';
         empty.style.display = 'grid';
         empty.style.placeItems = 'center';
-        empty.innerHTML = '<div style="opacity:.8; text-align:center; padding:20px">No pages configured.<br/>Edit <code>DEFAULT_PAGES</code> in the script.</div>';
+        empty.innerHTML = '<div style="opacity:.8;text-align:center">No pages configured.</div>';
         book.appendChild(empty);
         updateCounter();
         return;
       }
 
       if (isCoverView()){
-        const cover = createPage(pages[0], false, 'Front Cover');
-        book.appendChild(cover);
-        preloadSpread(1);
+        book.appendChild(createPage(pages[0], false, 'Front Cover'));
       } else if (isBackView()){
-        const back = createPage(pages[pages.length-1], false, 'Back Cover');
-        book.appendChild(back);
+        book.appendChild(createPage(pages[pages.length-1], false, 'Back Cover'));
       } else {
         const leftIdx = 1 + (spreadIndex-1)*2;
-        const rightIdx = leftIdx+1;
-        const left = createPage(pages[leftIdx], false, `Page ${leftIdx+1}`);
-        const right = createPage(pages[rightIdx], true, `Page ${rightIdx+1}`);
-        book.appendChild(left);
-        book.appendChild(right);
-        preloadSpread(spreadIndex+1);
+        const rightIdx = leftIdx + 1;
+        book.appendChild(createPage(pages[leftIdx], false, `Page ${leftIdx+1}`));
+        book.appendChild(createPage(pages[rightIdx], true, `Page ${rightIdx+1}`));
       }
       updateCounter();
-      setHashFromView();
     }
 
     function animateFlip(forward){
       if (isAnimating) return;
       if (REDUCED_MOTION){ render(); return; }
-
       isAnimating = true;
-      updateCounter();
-
       const book = viewport.querySelector('.book');
       if(!book){ isAnimating = false; return; }
 
       const leaf = document.createElement('div');
       leaf.className = 'page curling';
-
-      let targetImg = '';
       if (forward){
-        if (isCoverView()){
-          leaf.style.left = '0px';
-          leaf.style.transformOrigin = 'right center';
-          targetImg = pages[0];
-          leaf.innerHTML = `<img src="${targetImg}" alt="Front Cover" decoding="async">`;
-        } else {
-          const leftIdx = 1 + (spreadIndex-1)*2;
-          const rightIdx = leftIdx+1;
-          leaf.style.left = PAGE_W + 'px';
-          leaf.style.transformOrigin = 'right center';
-          targetImg = pages[rightIdx];
-          leaf.innerHTML = `<img src="${targetImg}" alt="Turning page" decoding="async">`;
-        }
+        leaf.style.left = isCoverView() ? '0' : PAGE_W + 'px';
+        leaf.style.transformOrigin = 'right center';
       } else {
-        if (isBackView()){
-          leaf.style.left = '0px';
-          leaf.style.transformOrigin = 'left center';
-          targetImg = pages[pages.length-1];
-          leaf.innerHTML = `<img src="${targetImg}" alt="Back Cover" decoding="async">`;
-        } else {
-          const leftIdx = 1 + (spreadIndex-1)*2;
-          leaf.style.left = '0px';
-          leaf.style.transformOrigin = 'left center';
-          targetImg = pages[leftIdx];
-          leaf.innerHTML = `<img src="${targetImg}" alt="Turning page" decoding="async">`;
-        }
+        leaf.style.left = '0';
+        leaf.style.transformOrigin = 'left center';
       }
-
+      leaf.innerHTML = `<img src="${pages[0]}" alt="Turning page">`;
       book.appendChild(leaf);
-      // Robust trigger: ensure initial state is committed before animating
-      leaf.style.transform = 'rotateY(0deg)';
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          leaf.style.transform = `rotateY(${forward ? -180 : 180}deg)`;
-        });
-      });
+
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        leaf.style.transform = `rotateY(${forward ? -180 : 180}deg)`;
+      }));
 
       leaf.addEventListener('transitionend', ()=>{ 
         isAnimating = false; 
@@ -317,15 +307,8 @@
         animateFlip(true);
         spreadIndex++;
         forwardFlips++;
-        if (!bgmStarted && forwardFlips === 2 && bgm) {
-          // Attempt to start audio after a clear user gesture (second flip)
-          bgm.load();
-          const p = bgm.play();
-          if (p && typeof p.then === 'function') {
-            p.then(()=>{ bgmStarted = true; updateAudioButtons(); }).catch(err=>{
-              console.warn('Audio play blocked or failed:', err);
-            });
-          } else { bgmStarted = true; updateAudioButtons(); }
+        if (!bgmStarted && forwardFlips === 2 && bgm){
+          bgm.play().then(()=>{ bgmStarted = true; updateAudioButtons(); }).catch(()=>{});
         }
       } else if (direction === -1 && spreadIndex > 0){
         animateFlip(false);
@@ -334,144 +317,41 @@
       updateCounter();
     }
 
-    // Preload both next and previous spreads, plus back cover near the end
-    function preloadSpread(targetIndex){
-      const indices = [];
-      // next spread
-      let leftIdx = 1 + (targetIndex-1)*2;
-      let rightIdx = leftIdx + 1;
-      indices.push(leftIdx, rightIdx);
-      // previous spread (optional)
-      if (targetIndex > 1){
-        let pl = 1 + (targetIndex-2)*2;
-        indices.push(pl, pl+1);
-      }
-      // back cover when close to the end
-      if (targetIndex >= maxSpread()-1){
-        indices.push(pages.length - 1);
-      }
-      indices.forEach(i => {
-        if (i >= 0 && i < pages.length){
-          const link = document.createElement('link');
-          link.rel = 'preload';
-          link.as = 'image';
-          link.href = pages[i];
-          document.head.appendChild(link);
-        }
-      });
-    }
-
-    // Keyboard
-    document.addEventListener('keydown', (e)=>{
-      if (e.key==='ArrowRight' || e.key.toLowerCase()==='d') { e.preventDefault(); flip(1); }
-      if (e.key==='ArrowLeft'  || e.key.toLowerCase()==='a') { e.preventDefault(); flip(-1); }
-      if (e.key==='Home'){ spreadIndex = 0; render(); }
-      if (e.key==='End'){ spreadIndex = maxSpread(); render(); }
+    document.addEventListener('keydown', e=>{
+      if (e.key==='ArrowRight'||e.key==='d') flip(1);
+      if (e.key==='ArrowLeft'||e.key==='a') flip(-1);
     });
-    prevBtn?.addEventListener('click', ()=> flip(-1));
-    nextBtn?.addEventListener('click', ()=> flip(1));
+    prevBtn.addEventListener('click', ()=> flip(-1));
+    nextBtn.addEventListener('click', ()=> flip(1));
 
-    // Click-to-nav on viewport, but ignore clicks on UI & audio controls
-    viewport.addEventListener('click', (e)=>{
-      if (e.target.closest('.ui, .audio-controls')) return;
-      const rect = viewport.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      if (x < rect.width/2) flip(-1); else flip(1);
-    });
-
-    // Basic swipe
-    let startX = null;
-    viewport.addEventListener('pointerdown', (e)=>{ startX = e.clientX; });
-    viewport.addEventListener('pointerup', (e)=>{
-      if (startX === null) return;
-      const dx = e.clientX - startX;
-      const THRESH = 30;
-      if (dx > THRESH) flip(-1);
-      else if (dx < -THRESH) flip(1);
-      startX = null;
-    });
-
-    // Fullscreen
     function isFullscreen(){ return !!document.fullscreenElement; }
     async function toggleFullscreen(){
-      try{
-        if (!isFullscreen()) { await viewport.requestFullscreen(); }
-        else { await document.exitFullscreen(); }
-      }catch(e){ console.warn('Fullscreen failed:', e); }
+      if (!isFullscreen()) await viewport.requestFullscreen();
+      else await document.exitFullscreen();
     }
     function updateFsLabel(){
-      const active = isFullscreen();
-      if (fsBtn){
-        fsBtn.textContent = active ? 'Exit ⛶' : '⛶ Fullscreen';
-        fsBtn.setAttribute('aria-pressed', String(active));
-      }
+      fsBtn.textContent = isFullscreen() ? 'Exit ⛶' : '⛶ Fullscreen';
     }
-    fsBtn?.addEventListener('click', toggleFullscreen);
+    fsBtn.addEventListener('click', toggleFullscreen);
     document.addEventListener('fullscreenchange', updateFsLabel);
 
-    // Audio buttons
     function updateAudioButtons(){
       if (!bgm) return;
-      if (muteBtn) muteBtn.textContent = bgm.muted ? '🔊 Unmute' : '🔇 Mute';
-      if (pauseBtn) pauseBtn.textContent = bgm.paused ? '▶️ Play' : '⏸️ Pause';
-      // Show which mirror is active in the console
-      console.debug('Audio UI updated. Active source:', bgm.currentSrc || '(none)');
+      muteBtn.textContent = bgm.muted ? '🔊 Unmute' : '🔇 Mute';
+      pauseBtn.textContent = bgm.paused ? '▶️ Play' : '⏸️ Pause';
     }
-    muteBtn?.addEventListener('click', ()=>{ if (bgm){ bgm.muted = !bgm.muted; updateAudioButtons(); }});
-    pauseBtn?.addEventListener('click', ()=>{
-      if (!bgm) return;
-      if (bgm.paused) {
-        // Kick the decoder in case the prior source failed silently
-        bgm.load();
-        bgm.play().then(()=>{ bgmStarted = true; updateAudioButtons(); }).catch(err=>{
-          console.warn('User-initiated play failed:', err, 'src:', bgm.currentSrc);
-        });
-      } else {
-        bgm.pause();
-      }
+    muteBtn.addEventListener('click', ()=>{ bgm.muted = !bgm.muted; updateAudioButtons(); });
+    pauseBtn.addEventListener('click', ()=>{
+      if (bgm.paused){ bgm.play(); } else { bgm.pause(); }
       updateAudioButtons();
     });
 
-    // Hash deep-linking: #v=3 → view index 3
-    function getViewFromHash(){
-      const m = location.hash.match(/v=(\d+)/);
-      const v = m ? parseInt(m[1],10) : 0;
-      return Math.max(0, Math.min(v, maxSpread()));
-    }
-    function setHashFromView(){
-      const v = Math.min(spreadIndex, maxSpread());
-      // Use replaceState to avoid cluttering history on each render
-      history.replaceState(null, '', `#v=${v}`);
-    }
-    window.addEventListener('hashchange', ()=>{
-      spreadIndex = getViewFromHash();
-      render();
-    });
-
-    // Self-tests & init
-    (function selfTests(){
-      try {
-        console.assert(!!viewport, 'viewport element exists');
-        console.assert(!!counterEl, 'counter element exists');
-        console.assert(!!prevBtn && !!nextBtn && !!fsBtn, 'nav buttons exist');
-        console.assert(!!bgm, 'audio element exists');
-        console.assert(!!muteBtn && !!pauseBtn, 'audio buttons exist');
-      } catch (err){ console.error('Self-tests failed:', err); }
-    })();
-
-    // Initial render sequence
     function init(){
-      spreadIndex = getViewFromHash();
       render();
       updateFsLabel();
       updateAudioButtons();
       viewport.focus({preventScroll:true});
-      // sanity width check (non-fatal)
-      const vw = parseInt(getComputedStyle(viewport).width);
-      const ok = (vw === PAGE_W || vw === PAGE_W*2);
-      if (!ok) console.debug('Viewport width is', vw, 'expected', PAGE_W, 'or', PAGE_W*2);
     }
-
     init();
   </script>
 </body>
