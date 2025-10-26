@@ -123,13 +123,11 @@
     const bgm = document.getElementById('bgm');
     // Candidate audio mirrors (edit these to real working URLs you control)
     const AUDIO_SOURCES = [
-      // 1) Your Google Drive direct link (file must be shared: Anyone with the link)
-      'https://docs.google.com/uc?export=download&id=1t2ENXHAVXBu0FlLesCcHx3ay0J-iPCtg',
-      // 2) A same-origin file you host alongside this HTML (best reliability)
-      'bgm.mp3',
-      // 3) Another CDN mirror you control (e.g., S3/CloudFront/Firebase/GitHub Release via jsDelivr)
-      // 'https://YOUR-CDN.example.com/path/bgm.mp3'
-    ];
+	  'audio/bgm.mp3',
+	  // optional extra mirror, e.g. absolute:
+	  // 'https://namyers29.github.io/charming/audio/bgm.mp3'
+	];
+
 
     function setAudioSources(urls){
       if (!bgm) return;
