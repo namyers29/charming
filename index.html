@@ -88,36 +88,17 @@
   </audio>
 
   <script>
-    // -------------------------------
-    // Config
-    // -------------------------------
-    const DEFAULT_PAGES = [
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipNgJrZxP6q40sGOPZrKP0xZAorreYNHFyp9qEhN?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipMY812xaVvurayr0R_BVsnEaCSI5rYz4QsS1FgV?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipMMCUiRzoqQ0MfiLKF-eZmxClp5lrdWjTIHJ8-i?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipNkLy5r0lIeASbC2zmeKFPSyjSE2vvBbgLtTJC4?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipODdBIkFFK7IcD7hEh9BfChiYOFPd7TjE37U2Q1?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipOOJ60-ADFU6LA4faJdBCS3p5JHlCpcvNNUuyXH?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipNequyjdNhIbhW3d3pj_wsmvDKqnkeY0DP_90lu?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipMMb3UymKWx_cX4x-HKdiK7mUVjq1AlF_l1w3x_?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipNfbb_CZs5a11WdGtnEObq0U2j5rfvG-hXFszju?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipOajRvl-Ze87lguaUMMhFTgPLbFiA3O7KH88KDy?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipPDE7S95ckKu0AuV5dvCWfukU_4cVXB0G7oNc6o?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipOwx06-YYQ3pHv87RMAG8lguQEdPFkO-Wa_Pp7u?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipOJRTxVKBFqRprMOxikIpvhXZ1wAp4AGr7eX7f3?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipNz58PidKeoWOgctlMbrDJS9QriIRBTL9A1dGZh?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipM0P7miiSPLP99DB-Ck8psSNEkIFjqfSsOALcii?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipM7GfBJrv3qFGA9GE9S9RNhDayhfgt7uGVFJY3Q?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipOUWoQ377N9Lz3cEnzYFTHoluaJyHbr0W42Bjwm?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipPyS1J3w2POIbHYmhO3F6kIuWnIog0rWfprDS6I?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipNpYSJ8mLpp09TiYKYPTi67YQsWjzdp9sroUQle?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipOvuTGExHSz0AY9HnELerPP_iLfu-eC_PHZhUB2?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipONVj5iuq6owQs8gJYS3D5XN6kVGcee9HdJqM6y?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB',
-      'https://photos.google.com/share/AF1QipN2J-hU0_3hr0ZuN6AlMRiUhKpkd9GLLp_-mkLG2qR9La6kezeTJ85opMGPam9A1g/photo/AF1QipMkRtIXxB_uZESyRrARFfthZH67H_XE78Px4eXl?key=M3BfdjNNOUpOY3dHQndpR2RrV1drNDVVY1dmV0hB'
-    ];
+	// -------------------------------
+	// Config
+	// -------------------------------
+	const BASE = 'https://namyers29.github.io/charming/img/';
+	const DEFAULT_PAGES = Array.from({length: 22}, (_, i) => {
+	  const n = String(i + 1).padStart(2, '0'); // 01, 02, … 22
+	  return `${BASE}${n}.png`;                // adjust to .jpg/.png if needed
+	});
 
-    // Optional fallback image path if a page fails to load
-    const FALLBACK_IMG = 'fallback.jpg'; // replace with your own placeholder image
+	// Optional placeholder if an image fails to load
+	const FALLBACK_IMG = 'https://namyers29.github.io/charming/img/fallback.png';
 
     // -------------------------------
     // State
