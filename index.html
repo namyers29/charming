@@ -239,6 +239,27 @@
       return p;
     }
 
+    // --- helpers for accurate indices + preload to avoid flashes ---
+    function spreadIndices(i){
+      // Returns { type: 'cover'|'back'|'spread', leftIdx, rightIdx }
+      if (!pages.length) return { type: 'cover', leftIdx: null, rightIdx: null };
+      if (i === 0) return { type: 'cover', leftIdx: 0, rightIdx: null };
+      if (i === maxSpread()) return { type: 'back', leftIdx: pages.length - 1, rightIdx: null };
+      const leftIdx = 1 + (i - 1) * 2;
+      return { type: 'spread', leftIdx, rightIdx: leftIdx + 1 };
+    }
+
+    function preloadImages(idxs){
+      idxs.forEach(idx => {
+        if (idx == null || idx < 0 || idx >= pages.length) return;
+        const im = new Image();
+        im.decoding = 'async';
+        im.loading = 'eager';
+        im.src = pages[idx];
+      });
+    }
+    // --------------------------------------------------------------
+
     function render(){
       viewport.innerHTML = '';
       const book = document.createElement('div');
@@ -257,62 +278,121 @@
         return;
       }
 
-      if (isCoverView()){
+      const info = spreadIndices(spreadIndex);
+
+      if (info.type === 'cover'){
         book.appendChild(createPage(pages[0], false, 'Front Cover'));
-      } else if (isBackView()){
+      } else if (info.type === 'back'){
         book.appendChild(createPage(pages[pages.length-1], false, 'Back Cover'));
       } else {
-        const leftIdx = 1 + (spreadIndex-1)*2;
-        const rightIdx = leftIdx + 1;
-        book.appendChild(createPage(pages[leftIdx], false, `Page ${leftIdx+1}`));
-        book.appendChild(createPage(pages[rightIdx], true, `Page ${rightIdx+1}`));
+        book.appendChild(createPage(pages[info.leftIdx], false, `Page ${info.leftIdx+1}`));
+        book.appendChild(createPage(pages[info.rightIdx], true, `Page ${info.rightIdx+1}`));
       }
       updateCounter();
     }
 
-    function animateFlip(forward){
+    // animateFlip now accepts a callback to run AFTER the animation completes
+    function animateFlip(forward, onDone){
       if (isAnimating) return;
-      if (REDUCED_MOTION){ render(); return; }
+      if (REDUCED_MOTION){
+        // No animation: immediately apply index change via onDone, then render
+        if (typeof onDone === 'function') onDone();
+        render();
+        return;
+      }
+
       isAnimating = true;
+      updateCounter(); // disables buttons during the animation
+
       const book = viewport.querySelector('.book');
       if(!book){ isAnimating = false; return; }
 
+      // Determine which image should be on the turning leaf, and preload destination
+      const cur = spreadIndices(spreadIndex);
+      let leafSrc = FALLBACK_IMG;
+
+      if (forward){
+        const nxt = spreadIndices(Math.min(spreadIndex + 1, maxSpread()));
+        preloadImages([nxt.leftIdx, nxt.rightIdx]);
+
+        if (cur.type === 'cover'){
+          leafSrc = pages[0];
+        } else if (cur.type === 'spread'){
+          leafSrc = pages[cur.rightIdx];
+        }
+      } else {
+        const prv = spreadIndices(Math.max(spreadIndex - 1, 0));
+        preloadImages([prv.leftIdx, prv.rightIdx]);
+
+        if (cur.type === 'back'){
+          leafSrc = pages[pages.length - 1];
+        } else if (cur.type === 'spread'){
+          leafSrc = pages[cur.leftIdx];
+        }
+      }
+
+      // Build the animated leaf
       const leaf = document.createElement('div');
       leaf.className = 'page curling';
+
+      // Position & hinge
       if (forward){
-        leaf.style.left = isCoverView() ? '0' : PAGE_W + 'px';
-        leaf.style.transformOrigin = 'right center';
+        if (isCoverView()){
+          leaf.style.left = '0px';
+          leaf.style.transformOrigin = 'right center';
+        } else {
+          leaf.style.left = PAGE_W + 'px';
+          leaf.style.transformOrigin = 'right center';
+        }
       } else {
-        leaf.style.left = '0';
+        leaf.style.left = '0px';
         leaf.style.transformOrigin = 'left center';
       }
-      leaf.innerHTML = `<img src="${pages[0]}" alt="Turning page">`;
+
+      // Correct image; eager + sync decode to avoid blink
+      const img = document.createElement('img');
+      img.src = leafSrc;
+      img.alt = 'Turning page';
+      img.loading = 'eager';
+      img.decoding = 'sync';
+      img.onerror = () => { if (FALLBACK_IMG) img.src = FALLBACK_IMG; };
+      leaf.appendChild(img);
+
       book.appendChild(leaf);
 
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      // Kick the transition
+      requestAnimationFrame(() => requestAnimationFrame(() => {
         leaf.style.transform = `rotateY(${forward ? -180 : 180}deg)`;
       }));
 
-      leaf.addEventListener('transitionend', ()=>{ 
-        isAnimating = false; 
-        render(); 
-      }, { once:true });
+      // Finish
+      leaf.addEventListener('transitionend', () => {
+        leaf.remove();
+        isAnimating = false;
+        if (typeof onDone === 'function') onDone();
+        render();
+      }, { once: true });
     }
 
     function flip(direction){
       if (isAnimating) return;
+
       if (direction === 1 && spreadIndex < maxSpread()){
-        animateFlip(true);
-        spreadIndex++;
-        forwardFlips++;
-        if (!bgmStarted && forwardFlips === 2 && bgm){
-          bgm.play().then(()=>{ bgmStarted = true; updateAudioButtons(); }).catch(()=>{});
-        }
+        // Defer the index change until AFTER the animation (prevents blink/race)
+        animateFlip(true, () => {
+          spreadIndex++;
+          forwardFlips++;
+          if (!bgmStarted && forwardFlips === 2 && bgm){
+            bgm.play().then(()=>{ bgmStarted = true; updateAudioButtons(); }).catch(()=>{});
+          }
+          updateCounter();
+        });
       } else if (direction === -1 && spreadIndex > 0){
-        animateFlip(false);
-        spreadIndex--;
+        animateFlip(false, () => {
+          spreadIndex--;
+          updateCounter();
+        });
       }
-      updateCounter();
     }
 
     document.addEventListener('keydown', e=>{
