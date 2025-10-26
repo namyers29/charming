@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HTML5 Flipbook (22 Pages) — Updated Layout</title>
+  <title>HTML5 Flipbook (22 Pages) — No Fullscreen</title>
   <style>
     :root {
       --bg: #0b0c10;
@@ -132,15 +132,14 @@
   <div class="stage">
     <div class="viewport" id="viewport" aria-live="polite" tabindex="0"></div>
 
-    <!-- NAVIGATION CONTROLS (above audio) -->
+    <!-- NAVIGATION CONTROLS -->
     <div class="ui" id="ui" role="toolbar" aria-label="Flipbook navigation">
       <button class="nav" id="prevBtn" aria-label="Previous page">⟵</button>
       <div class="counter" id="counter" aria-live="polite">1 / 1</div>
       <button class="nav" id="nextBtn" aria-label="Next page">⟶</button>
-      <button class="nav" id="fsBtn" aria-label="Fullscreen" aria-pressed="false">⛶ Fullscreen</button>
     </div>
 
-    <!-- AUDIO CONTROLS (below nav) -->
+    <!-- AUDIO CONTROLS -->
     <div class="audio-controls" aria-label="Background audio controls">
       <span class="audio-label">Audio:</span>
       <button class="nav" id="muteBtn" aria-label="Mute">🔇 Mute</button>
@@ -171,7 +170,6 @@
     const counterEl = document.getElementById('counter');
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
-    const fsBtn = document.getElementById('fsBtn');
     const bgm = document.getElementById('bgm');
     const muteBtn = document.getElementById('muteBtn');
     const pauseBtn = document.getElementById('pauseBtn');
@@ -324,17 +322,6 @@
     prevBtn.addEventListener('click', ()=> flip(-1));
     nextBtn.addEventListener('click', ()=> flip(1));
 
-    function isFullscreen(){ return !!document.fullscreenElement; }
-    async function toggleFullscreen(){
-      if (!isFullscreen()) await viewport.requestFullscreen();
-      else await document.exitFullscreen();
-    }
-    function updateFsLabel(){
-      fsBtn.textContent = isFullscreen() ? 'Exit ⛶' : '⛶ Fullscreen';
-    }
-    fsBtn.addEventListener('click', toggleFullscreen);
-    document.addEventListener('fullscreenchange', updateFsLabel);
-
     function updateAudioButtons(){
       if (!bgm) return;
       muteBtn.textContent = bgm.muted ? '🔊 Unmute' : '🔇 Mute';
@@ -348,7 +335,6 @@
 
     function init(){
       render();
-      updateFsLabel();
       updateAudioButtons();
       viewport.focus({preventScroll:true});
     }
