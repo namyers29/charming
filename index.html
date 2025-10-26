@@ -33,7 +33,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px; /* controls close to bottom of book */
+      gap: 8px;
     }
 
     .viewport {
@@ -67,8 +67,9 @@
       display: block;
     }
 
+    /* Slower, smoother */
     .curling {
-      transition: transform 0.8s cubic-bezier(.77,.2,.05,1.0);
+      transition: transform 1.15s cubic-bezier(.65,.05,.36,1);
       will-change: transform;
       z-index: 10;
       pointer-events: none;
@@ -164,6 +165,9 @@
     let forwardFlips = 0;
     let bgmStarted = false;
     let isAnimating = false;
+
+    // Hold Shift for slow-motion flip
+    let slowMo = false;
 
     const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const viewport = document.getElementById('viewport');
@@ -295,14 +299,13 @@
     function animateFlip(forward, onDone){
       if (isAnimating) return;
       if (REDUCED_MOTION){
-        // No animation: immediately apply index change via onDone, then render
         if (typeof onDone === 'function') onDone();
         render();
         return;
       }
 
       isAnimating = true;
-      updateCounter(); // disables buttons during the animation
+      updateCounter(); // disables buttons
 
       const book = viewport.querySelector('.book');
       if(!book){ isAnimating = false; return; }
@@ -335,6 +338,15 @@
       const leaf = document.createElement('div');
       leaf.className = 'page curling';
 
+      // Opaque + stable paint to prevent flashing
+      leaf.style.background = '#0c0f16';
+      leaf.style.contain = 'paint layout';
+
+      // Slow-mo override when Shift is held
+      if (slowMo) {
+        leaf.style.transition = 'transform 2.2s cubic-bezier(.65,.05,.36,1)';
+      }
+
       // Position & hinge
       if (forward){
         if (isCoverView()){
@@ -355,22 +367,39 @@
       img.alt = 'Turning page';
       img.loading = 'eager';
       img.decoding = 'sync';
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
       img.onerror = () => { if (FALLBACK_IMG) img.src = FALLBACK_IMG; };
       leaf.appendChild(img);
 
+      // Optional soft curl shade (helps mask micro flashes)
+      const shade = document.createElement('div');
+      shade.style.position = 'absolute';
+      shade.style.inset = '0';
+      shade.style.pointerEvents = 'none';
+      shade.style.mixBlendMode = 'multiply';
+      shade.style.opacity = '0.22';
+      shade.style.background = forward
+        ? 'linear-gradient(90deg, rgba(0,0,0,0.35), rgba(0,0,0,0.0) 40%)'
+        : 'linear-gradient(270deg, rgba(0,0,0,0.35), rgba(0,0,0,0.0) 40%)';
+      leaf.appendChild(shade);
+
       book.appendChild(leaf);
 
-      // Kick the transition
+      // Kick the transition (GPU nudge via translateZ)
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        leaf.style.transform = `rotateY(${forward ? -180 : 180}deg)`;
+        leaf.style.transform = `translateZ(0.001px) rotateY(${forward ? -180 : 180}deg)`;
       }));
 
-      // Finish
+      // Finish (double RAF before render to prevent last-frame flash)
       leaf.addEventListener('transitionend', () => {
         leaf.remove();
         isAnimating = false;
         if (typeof onDone === 'function') onDone();
-        render();
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          render();
+        }));
       }, { once: true });
     }
 
@@ -378,7 +407,6 @@
       if (isAnimating) return;
 
       if (direction === 1 && spreadIndex < maxSpread()){
-        // Defer the index change until AFTER the animation (prevents blink/race)
         animateFlip(true, () => {
           spreadIndex++;
           forwardFlips++;
@@ -398,7 +426,12 @@
     document.addEventListener('keydown', e=>{
       if (e.key==='ArrowRight'||e.key==='d') flip(1);
       if (e.key==='ArrowLeft'||e.key==='a') flip(-1);
+      if (e.key === 'Shift') slowMo = true;  // slow-mo while held
     });
+    document.addEventListener('keyup', e=>{
+      if (e.key === 'Shift') slowMo = false;
+    });
+
     prevBtn.addEventListener('click', ()=> flip(-1));
     nextBtn.addEventListener('click', ()=> flip(1));
 
